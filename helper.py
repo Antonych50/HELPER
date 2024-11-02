@@ -1,5 +1,5 @@
 import tkinter as tk
-from operator import index
+#from operator import index
 from tkinter import messagebox
 from tkinter import filedialog
 from PIL import Image, ImageTk
@@ -12,7 +12,7 @@ def open_project():
     print(project_path)
     with open(project_path+"/Metal.txt", 'r', encoding='utf-8') as f:
         lst = f.readlines()
-        print(lst)
+        #print(lst)
         global listbox
         for item in lst:
            listbox.insert(tk.END, item.strip())
@@ -20,7 +20,7 @@ def open_project():
 def update_listbox(*args):
     # Получаем текущий текст из текстового поля
     search_term = search_var.get().lower()
-
+    listbox.place(x=10, y=55)
     # Очищаем текущий выбор в Listbox
     listbox.selection_clear(0, tk.END)
 
@@ -32,8 +32,9 @@ def update_listbox(*args):
              try:
                 # Поиск индекса элемента по значению
                 index = items.index(item)
-                #listbox.selection_set(index)
+                listbox.selection_set(index)
                 listbox.see(index)
+                break
              except ValueError:
                 #listbox.hide()
                 break
@@ -96,15 +97,21 @@ menu_bar.add_cascade(label="Помощь", menu=help_menu)
 
 # Устанавливаем меню в главное окно
 root.config(menu=menu_bar)
+#Создаём заголовки для полей ввода
+lbl1 = tk.Label(root, text = "Ввелите наименование товара:", font=("Arial", 10))
+#lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
+lbl1.place(x=10, y=5, width=200, height=20)
+canvas.create_window(200, 20, window=lbl1)
 
 # Создаем текстовое поле для ввода
 search_var = tk.StringVar()
 search_var.trace("w", update_listbox)  # Связываем изменение текста с функцией
-entry = tk.Entry(canvas, textvariable=search_var)
-entry.pack()
+entry = tk.Entry(root, width=60, textvariable=search_var)
+entry.place(x=10, y=30)
+entry.focus_set()  # Установить фокус ввода на виджет Entry
 
 
-listbox = tk.Listbox(canvas, width=50, height=20)
-listbox.pack(padx=10, pady=10)
+listbox = tk.Listbox(root, width=60, height=20)
+listbox.place_forget()#x=10, y=55)
 # Запускаем главный цикл приложения
 root.mainloop()
