@@ -9,6 +9,13 @@ import re
 
 S1 = 'Выберите категорию товаров в правом верхнем углу окна'
 S2 = 'В меню "Файл" откройте уже существующий учёт ("Открыть"), либо создайте новый ("Создать")'
+
+def ctrl_frame_visibility():
+    if frame.winfo_viewable():  # Проверяем, видим ли фрейм сейчас
+        frame.pack_forget()  # Убираем фрейм с экрана
+    else:
+        frame.pack()  # Возвращаем фрейм обратно на экран
+
 def check_focus(widget):
     current_focus = root.focus_get()
     return current_focus == widget
@@ -140,6 +147,11 @@ canvas = tk.Canvas(root, width=image.width, height=image.height)
 canvas.pack(fill='both', expand=True)
 canvas.create_image(0, 0, image=background_image, anchor='nw')
 #canvas.lift()
+
+# Создаем фрейм
+frame = tk.Frame(canvas, height=450)
+frame.pack(anchor=NW, fill=X)
+
 # Создаем объект меню
 menu_bar = tk.Menu(root)
 
@@ -162,28 +174,28 @@ menu_bar.add_cascade(label="Помощь", menu=help_menu)
 # Устанавливаем меню в главное окно
 root.config(menu=menu_bar)
 #Создаём заголовки для полей ввода
-lbl1 = tk.Label(canvas, text = "1. Введите наименование товара:", font=("Arial", 10), background='LightCyan')
+lbl1 = tk.Label(frame, text = "1. Введите наименование товара:", font=("Arial", 10), background='LightCyan')
 lbl1.place(x=10, y=5, width=200, height=20)
 #canvas.create_window(200, 20, window=lbl1)
 
-lbl2 = tk.Label(canvas, text = "2. Выберите единицу измерения:", font=("Arial", 10))
+lbl2 = tk.Label(frame, text = "2. Выберите единицу измерения:", font=("Arial", 10))
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
 lbl2.place(x=10, y=55, width=200, height=20)
 #canvas.create_window(200, 20, window=lbl1)
 
-lbl3 = tk.Label(canvas, text = "3. Введите количество товара:", font=("Arial", 10))
+lbl3 = tk.Label(frame, text = "3. Введите количество товара:", font=("Arial", 10))
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
 lbl3.place(x=10, y=80, width=185, height=20)
 
-lbl4 = tk.Label(canvas, text = "4. Введите цену единицы товара:", font=("Arial", 10))
+lbl4 = tk.Label(frame, text = "4. Введите цену единицы товара:", font=("Arial", 10))
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
 lbl4.place(x=10, y=105, width=205, height=20)
 
-lbl5 = tk.Label(canvas, text = "Общая стоимость товара: ", font=("Arial", 11), fg="DarkBlue")
+lbl5 = tk.Label(frame, text = "Общая стоимость товара: ", font=("Arial", 11), fg="DarkBlue")
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
 lbl5.place(x=10, y=135, width=225, height=20)
 
-lbl6 = tk.Label(canvas, text = "", font=("Arial", 11), foreground="DarkBlue")
+lbl6 = tk.Label(frame, text = "", font=("Arial", 11), foreground="DarkBlue")
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
 lbl6.place(x=245, y=135, width=75, height=20)
 #Строка состояния и подсказок
@@ -194,27 +206,27 @@ lbl7["text"] = S1
 # Создаем текстовое поле для ввода
 search_var = tk.StringVar()
 search_var.trace("w", update_listbox)  # Связываем изменение текста с функцией
-entry1 = tk.Entry(canvas, width=55, background='LightCyan', textvariable=search_var)
+entry1 = tk.Entry(frame, width=55, background='LightCyan', textvariable=search_var)
 entry1.place(x=8, y=30)
 entry1.focus_set()  # Установить фокус ввода на виджет Entry
 entry1.bind('<KeyPress>', on_key_press)
 
-entry2 = tk.Entry(canvas, width=5)
+entry2 = tk.Entry(frame, width=5)
 entry2.place(x=200, y=80)
 entry2.bind('<KeyPress>', on_key_press)
 #print("Entry2:",entry2.cget("bg"))
-entry3 = tk.Entry(canvas, width=5)
+entry3 = tk.Entry(frame, width=5)
 entry3.place(x=220, y=105)
 entry3.bind('<KeyPress>', on_key_press)
 
 #Создаём ListBox
-listbox = tk.Listbox(canvas, width=55, height=20)
+listbox = tk.Listbox(frame, width=55, height=20)
 listbox.place(x=10, y=55)
 listbox.place_forget()
 # Устанавливаем связь между событием нажатия клавиши и обработчиком
 listbox.bind('<KeyPress>', on_key_press)
 
-lst = tk.Listbox(canvas, width=20, height=5, font=("Arial", 10), fg="Purple", justify = "left", bg = "AntiqueWhite")
+lst = tk.Listbox(frame, width=20, height=5, font=("Arial", 10), fg="Purple", justify = "left", bg = "AntiqueWhite")
 lst.insert(0,"Продукты")
 lst.insert(1,"Металлоизделия")
 lst.insert(2,"Стройматериалы")
@@ -231,25 +243,29 @@ combo1.current(0)# Устанавливаем значение по умолча
 combo1.bind('<KeyPress>', on_key_press)
 
 # Создаем виджет Treeview
-tree = ttk.Treeview(canvas, columns=("Имя", "Возраст", "Профессия"), show="headings")
-tree.grid(row=0, column=0)#, sticky='nsew')
+'''tree = ttk.Treeview(canvas, columns=("Name", "Measure_unit", "Quantity","Cost","Summa","Date"), show="headings")
+#tree.grid(row=0, column=0, sticky='nsew')
 
 # Определяем заголовки столбцов
-tree.heading("Имя", text="Имя")
-tree.heading("Возраст", text="Возраст")
-tree.heading("Профессия", text="Профессия")
-
+tree.heading("Name", text="Наименование товара")
+tree.heading("Measure_unit", text="Ед.измер.")
+tree.heading("Quantity", text="Количество")
+tree.heading("Cost", text="Цена")
+tree.heading("Summa", text="Стоимость")
+tree.heading("Date", text="Дата")
 # Определяем ширину столбцов
-tree.column("Имя", width=100)
-tree.column("Возраст", width=50)
-tree.column("Профессия", width=150)
-
+tree.column("Name", width=100)
+tree.column("Measure_unit", width=50)
+tree.column("Quantity", width=150)
+tree.column("Cost", width=100)
+tree.column("Summa", width=50)
+tree.column("Date", width=150)
 # Добавляем данные в таблицу
 data = [
-    ("Алексей", 30, "Инженер"),
-    ("Мария", 25, "Дизайнер"),
-    ("Иван", 40, "Менеджер"),
-    ("Анна", 35, "Маркетолог")
+    ("Алексей", "Кг", 30, 3, 90, '12.11.2024'),
+    #("Мария", 25, "Дизайнер"),
+    #("Иван", 40, "Менеджер"),
+    #("Анна", 35, "Маркетолог")
 ]
 
 for item in data:
@@ -259,9 +275,10 @@ tree.pack(fill='both', expand=True)
 
 # Добавляем скроллбар
 scrollbar = ttk.Scrollbar(root, orient="vertical", command=tree.yview)
-scrollbar.grid(row=0, column=1, sticky='ns')
-tree.configure(yscroll=scrollbar.set)
+#scrollbar.location(row=0, column=1, sticky='ns')
+#tree.configure(yscroll=scrollbar.set)'''
 
+#ctrl_frame_visibility()
 
 # Запускаем главный цикл приложения
 root.mainloop()
