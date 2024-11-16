@@ -1,4 +1,5 @@
 import tkinter as tk
+from operator import index
 from tkinter import ttk
 from tkinter import *
 #from operator import index
@@ -6,15 +7,17 @@ from tkinter import messagebox
 from tkinter import filedialog
 from PIL import Image, ImageTk
 import re
+import os
+
 
 S1 = 'Выберите категорию товаров в правом верхнем углу окна'
 S2 = 'В меню "Файл" откройте уже существующий учёт ("Открыть"), либо создайте новый ("Создать")'
 
 def ctrl_frame_visibility():
-    if frame.winfo_viewable():  # Проверяем, видим ли фрейм сейчас
-        frame.pack_forget()  # Убираем фрейм с экрана
-    else:
-        frame.pack()  # Возвращаем фрейм обратно на экран
+    #if frame.winfo_viewable():  # Проверяем, видим ли фрейм сейчас
+        frame.pack_forget()  # Убираем фрейм со всеми подчиненными с экрана
+    #else:
+        #frame.pack()  # Возвращаем фрейм обратно на экран
 
 def check_focus(widget):
     current_focus = root.focus_get()
@@ -33,14 +36,14 @@ def on_key_press(event):
         entry1.delete(0, tk.END)
         entry1.insert(0,str(listbox.get(i)))
         listbox.place_forget()
-        combo1.focus_set()
+        listbox3.focus_set()
         lbl1.config(background='SystemWindow')
         entry1.config(background='SystemWindow')
         lbl2.config(background='LightCyan')
-        combo1.config(background='LightCyan')
-    elif ((event.keysym == 'Return') or (event.keysym == 'Tab')) and check_focus(combo1):
+        listbox3.config(background='LightCyan')
+    elif ((event.keysym == 'Return') or (event.keysym == 'Tab')) and check_focus(listbox3):
         lbl2.config(background='SystemWindow')
-        combo1.config(background='SystemWindow')
+        listbox3.config(background='SystemWindow')
         lbl3.config(background='LightCyan')
         entry2.config(background='LightCyan')
         entry2.focus_set()
@@ -59,6 +62,40 @@ def on_key_press(event):
         cost = round(cost,2)
         lbl6.config(text = str(cost), background='LightCyan')
 
+def category_selected(event):
+    if event.keysym != 'Return':
+        return
+    global listbox2
+    listbox.delete(0, tk.END)
+    cur_listbox = event.widget
+    curr_sel = cur_listbox.curselection()
+    category_name = cur_listbox.get(curr_sel[0])
+
+    # Получаем абсолютный путь к текущему файлу
+    current_file_path = os.path.abspath(__file__)
+
+    # Получаем путь к директории, в которой находится текущий файл
+    current_directory = os.path.dirname(current_file_path)
+    match category_name:
+        case 'Продукты':
+            category_name = 'Products.txt'
+        case "Металлоизделия":
+            category_name = 'Metal.txt'
+        case "Стройматериалы":
+            category_name = 'Build.txt'
+        case "Автозапчасти":
+            category_name = 'Avto.txt'
+
+
+    with open(current_directory + "/" + category_name, 'r', encoding='utf-8') as f:
+        listbox2 = f.readlines()#Заполняем лист "подсказок"
+        # print(listbox2)
+        #global listbox
+
+        for item in listbox2:
+            listbox.insert(tk.END, item.strip())
+    frame.place(x=0,y=0, width=350, height=450)#Показываем фрейм со всем содержимым
+    entry1.focus_set()
 
 def move_selection(direction):
     # Получаем текущий выбранный элемент
@@ -82,10 +119,10 @@ def open_project():
     project_path = filedialog.askdirectory(title="Выберите папку Вашего проекта")
     #print(project_path)
     with open(project_path+"/Metal.txt", 'r', encoding='utf-8') as f:
-        lst = f.readlines()
-        #print(lst)
+        listbox2 = f.readlines()
+        #print(listbox2)
         global listbox
-        for item in lst:
+        for item in listbox2:
            listbox.insert(tk.END, item.strip())
 
 def update_listbox(*args):
@@ -100,15 +137,16 @@ def update_listbox(*args):
     for item in items:
         if re.match(search_term, item.lower()): #(search_term in item.lower():
             # Если текст найден в элементе, выбираем его и прокручиваем к нему
-             try:
+            try:
                 # Поиск индекса элемента по значению
                 index = items.index(item)
                 listbox.selection_set(index)
                 listbox.see(index)
                 break
-             except ValueError:
+            except ValueError:
                 #listbox.hide()
                 break
+
 
 # Здесь добавить логику для открытия и обработки файла
 
@@ -124,7 +162,7 @@ def exit_app():
 
 # Создаем главное окно приложения
 root = tk.Tk()
-root.title("Пример меню")
+root.title("Контроль и учёт...")
 # Получаем ширину и высоту экрана
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -137,20 +175,21 @@ y = (screen_height - height) // 2
 
 # Устанавливаем размеры и положение окна
 root.geometry(f'{width}x{height}+{x}+{y}')
-
+root.config(background='#556B2F')
 # Загружаем фоновое изображение
-image = Image.open("backgrnd.png")
-background_image = ImageTk.PhotoImage(image)
+#image = Image.open("bg.png")
+#background_image = ImageTk.PhotoImage(image)
 
 # Создаём` Canvas и установливаем фоновое изображение
-canvas = tk.Canvas(root, width=image.width, height=image.height)
-canvas.pack(fill='both', expand=True)
-canvas.create_image(0, 0, image=background_image, anchor='nw')
+#canvas = tk.Canvas(root, width=image.width, height=image.height)
+#canvas.pack(fill='both', expand=True)
+#canvas.create_image(0, 0, image=background_image, anchor='nw')
 #canvas.lift()
 
 # Создаем фрейм
-frame = tk.Frame(canvas, height=450)
+frame = tk.Frame(root, width=400, height=450, borderwidth=0, bg='#556B2F')#width=root.winfo_width()
 frame.pack(anchor=NW, fill=X)
+frame.pack_propagate(False)  # Отключаем автоизменение размеров фрейма
 
 # Создаем объект меню
 menu_bar = tk.Menu(root)
@@ -199,7 +238,7 @@ lbl6 = tk.Label(frame, text = "", font=("Arial", 11), foreground="DarkBlue")
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
 lbl6.place(x=245, y=135, width=75, height=20)
 #Строка состояния и подсказок
-lbl7 = tk.Label(canvas, text = "", font=("Arial", 8), fg="Purple", justify = "right")
+lbl7 = tk.Label(root, text = "", font=("Arial", 8), fg="Purple", justify = "right")#Строка "состояния"
 lbl7.pack(side  = BOTTOM, fill = X)
 lbl7["text"] = S1
 #canvas.create_window(200, 20, window=lbl1)
@@ -226,21 +265,25 @@ listbox.place_forget()
 # Устанавливаем связь между событием нажатия клавиши и обработчиком
 listbox.bind('<KeyPress>', on_key_press)
 
-lst = tk.Listbox(frame, width=20, height=5, font=("Arial", 10), fg="Purple", justify = "left", bg = "AntiqueWhite")
-lst.insert(0,"Продукты")
-lst.insert(1,"Металлоизделия")
-lst.insert(2,"Стройматериалы")
+category_list =["Продукты", "Металлоизделия", "Стройматериалы", "Автозапчасти"]
+# Создаем StringVar
+category_string = tk.StringVar(value=" ".join(category_list))
 
-lst.insert(3,"Автозапчасти")
-lst.pack(anchor = NE)
-lst.bind()
+listbox2 = tk.Listbox(root, width=20, height=5, font=("Arial", 10), fg="Purple", justify = "left",
+                 bg = "AntiqueWhite", selectmode=SINGLE, listvariable=category_string)
+listbox2.pack(anchor = NE)
+listbox2.bind('<KeyPress>', category_selected)
+listbox2.configure(height=listbox2.size())
 # Создаем Combobox
-combo1 = ttk.Combobox(canvas, width=15, height=10, values=["Кг", "гр (грамм)", "м (метр)", "л (литр)",
+units = ["Кг", "гр (грамм)", "м (метр)", "л (литр)",
     "п (пакет)", "пчк (пачка)", "шт (штука)", "ед (единица)","уп (упаковка)", "стк (сетка)","т (тонна)",
-    "кв.м (квадратный метр)", "куб.м (кубометр)"], )
-combo1.place(x=215, y=55)
-combo1.current(0)# Устанавливаем значение по умолчанию
-combo1.bind('<KeyPress>', on_key_press)
+    "кв.м (квадратный метр)", "куб.м (кубометр)"]
+listbox3 = tk.Listbox(frame, width=15, height=10)
+for item in units:
+    listbox3.insert(tk.END, str(item))
+listbox3.place(x=215, y=54)
+#combo1.current(0)# Устанавливаем значение по умолчанию
+listbox3.bind('<KeyPress>', on_key_press)
 
 # Создаем виджет Treeview
 '''tree = ttk.Treeview(canvas, columns=("Name", "Measure_unit", "Quantity","Cost","Summa","Date"), show="headings")
@@ -278,7 +321,7 @@ scrollbar = ttk.Scrollbar(root, orient="vertical", command=tree.yview)
 #scrollbar.location(row=0, column=1, sticky='ns')
 #tree.configure(yscroll=scrollbar.set)'''
 
-#ctrl_frame_visibility()
+ctrl_frame_visibility()
 
 # Запускаем главный цикл приложения
 root.mainloop()
