@@ -5,7 +5,7 @@ from tkinter import *
 #from operator import index
 from tkinter import messagebox
 from tkinter import filedialog
-from PIL import Image, ImageTk
+from tkcalendar import DateEntry
 import re
 import os
 
@@ -32,18 +32,29 @@ def on_key_press(event):
         move_selection(1)
     elif ((event.keysym == 'Return') or (event.keysym == 'Tab')) and (check_focus(entry1) or check_focus(listbox)):
         selected_indices = listbox.curselection()
-        i = selected_indices[0]
-        entry1.delete(0, tk.END)
-        entry1.insert(0,str(listbox.get(i)))
+        if selected_indices:
+            i = selected_indices[0]
+            entry1.delete(0, tk.END)
+            entry1.insert(0,str(listbox.get(i)))
         listbox.place_forget()
         listbox3.focus_set()
         lbl1.config(background='SystemWindow')
         entry1.config(background='SystemWindow')
         lbl2.config(background='LightCyan')
         listbox3.config(background='LightCyan')
+        listbox3.config(height=12)
     elif ((event.keysym == 'Return') or (event.keysym == 'Tab')) and check_focus(listbox3):
         lbl2.config(background='SystemWindow')
         listbox3.config(background='SystemWindow')
+        listbox3.config(height=1)
+        selected_indices = listbox.curselection()
+        if selected_indices:
+            i = selected_indices[0]
+            tmp = listbox3.get(i)
+            listbox3.delete(i)
+            listbox3.insert(i, listbox3.get(0))
+            listbox3.delete(0)
+            listbox3.insert(0, tmp)
         lbl3.config(background='LightCyan')
         entry2.config(background='LightCyan')
         entry2.focus_set()
@@ -58,10 +69,15 @@ def on_key_press(event):
         entry3.config(background='SystemWindow')
         lbl5.config(background='LightCyan')
         # Вычисляем и выводим общую стоимость выбранного товара
-        cost = float(entry2.get())*float(entry3.get())
-        cost = round(cost,2)
-        lbl6.config(text = str(cost), background='LightCyan')
-
+        try:
+            o1 = float(entry2.get())
+            o2 = float(entry3.get())
+            cost = o1*o2
+            cost = round(cost,2)
+            lbl6.config(text = str(cost), background='LightCyan')
+        except ValueError as ve:
+            lbl7.config(text = "Введите необходимые для расчёта данные!", foreground='Purple', font=("Arial", 12))
+            lbl6.config(text = "ОШИБКА!", foreground='Red', background='LightYellow')
 def category_selected(event):
     if event.keysym != 'Return':
         return
@@ -76,18 +92,9 @@ def category_selected(event):
 
     # Получаем путь к директории, в которой находится текущий файл
     current_directory = os.path.dirname(current_file_path)
-    match category_name:
-        case 'Продукты':
-            category_name = 'Products.txt'
-        case "Металлоизделия":
-            category_name = 'Metal.txt'
-        case "Стройматериалы":
-            category_name = 'Build.txt'
-        case "Автозапчасти":
-            category_name = 'Avto.txt'
+    file_category = category_dict[category_name] +".txt"
 
-
-    with open(current_directory + "/" + category_name, 'r', encoding='utf-8') as f:
+    with open(current_directory + "/" + file_category, 'r', encoding='utf-8') as f:
         listbox2 = f.readlines()#Заполняем лист "подсказок"
         # print(listbox2)
         #global listbox
@@ -147,6 +154,19 @@ def update_listbox(*args):
                 #listbox.hide()
                 break
 
+def on_focus_in(event):
+    el_gui = event.widget
+    global listbox3
+    global entry1
+    if el_gui==listbox3:
+        listbox3.config(height=15, background='LightCyan')
+    elif (el_gui==entry1):
+        lbl7['text'] = ''
+        lbl6['text'] = ''
+        lbl5.config(background='SystemWindow')
+        lbl6.config(background='SystemWindow')
+        lbl1.config(background='LightCyan')
+        entry1.config(background='LightCyan')
 
 # Здесь добавить логику для открытия и обработки файла
 
@@ -214,29 +234,35 @@ menu_bar.add_cascade(label="Помощь", menu=help_menu)
 root.config(menu=menu_bar)
 #Создаём заголовки для полей ввода
 lbl1 = tk.Label(frame, text = "1. Введите наименование товара:", font=("Arial", 10), background='LightCyan')
-lbl1.place(x=10, y=5, width=200, height=20)
+lbl1.place(x=5, y=5, width=200, height=20)
 #canvas.create_window(200, 20, window=lbl1)
 
 lbl2 = tk.Label(frame, text = "2. Выберите единицу измерения:", font=("Arial", 10))
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
-lbl2.place(x=10, y=55, width=200, height=20)
+lbl2.place(x=5, y=55, width=200, height=20)
 #canvas.create_window(200, 20, window=lbl1)
 
 lbl3 = tk.Label(frame, text = "3. Введите количество товара:", font=("Arial", 10))
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
-lbl3.place(x=10, y=80, width=185, height=20)
+lbl3.place(x=5, y=80, width=185, height=20)
 
 lbl4 = tk.Label(frame, text = "4. Введите цену единицы товара:", font=("Arial", 10))
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
-lbl4.place(x=10, y=105, width=205, height=20)
+lbl4.place(x=5, y=105, width=205, height=20)
+
+lbl8 = tk.Label(frame, text = "5. Введите дату покупки товара: ", font=("Arial", 10))
+lbl8.place(x=5, y=130, width=225, height=20)
+# Создаем DateEntry
+date_entry = DateEntry(frame, width=12, background='darkblue', foreground='white', borderwidth=2)
+date_entry.place(x=235, y=129)
 
 lbl5 = tk.Label(frame, text = "Общая стоимость товара: ", font=("Arial", 11), fg="DarkBlue")
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
-lbl5.place(x=10, y=135, width=225, height=20)
+lbl5.place(x=5, y=155, width=225, height=20)
 
 lbl6 = tk.Label(frame, text = "", font=("Arial", 11), foreground="DarkBlue")
 #lbl1 =  tk.Label(root, text="Hello, World!", bg="white", fg="black")
-lbl6.place(x=245, y=135, width=75, height=20)
+lbl6.place(x=245, y=155, width=75, height=20)
 #Строка состояния и подсказок
 lbl7 = tk.Label(root, text = "", font=("Arial", 8), fg="Purple", justify = "right")#Строка "состояния"
 lbl7.pack(side  = BOTTOM, fill = X)
@@ -245,10 +271,18 @@ lbl7["text"] = S1
 # Создаем текстовое поле для ввода
 search_var = tk.StringVar()
 search_var.trace("w", update_listbox)  # Связываем изменение текста с функцией
-entry1 = tk.Entry(frame, width=55, background='LightCyan', textvariable=search_var)
-entry1.place(x=8, y=30)
+entry1 = tk.Entry(frame, width=55, background='LightCyan', textvariable=search_var)#Наименование продукта
+entry1.place(x=4, y=30)
 entry1.focus_set()  # Установить фокус ввода на виджет Entry
 entry1.bind('<KeyPress>', on_key_press)
+entry1.bind("<FocusIn>", on_focus_in)
+
+'''units = ["Кг", "гр (грамм)", "м (метр)", "л (литр)",
+    "пак (пакет)", "пчк (пачка)", "шт (штука)", "ед (единица)","уп (упаковка)", "рлн (рулон)", "стк (сетка)", "мшк (мешок)", "т (тонна)",
+    "кв.м (квадратный метр)", "куб.м (кубометр)"]'''
+units = {"Килограмм":"Кг", "грамм":"гр", "метр":"м","литр":"л",
+    "пакет":"пак", "пачка":"пчк", "штука":"шт", "единица":"ед", "упаковка":"уп", "рулон":"рлн", "сетка":"стк", "мешок":"мшк", "тонна":"т",
+    "квадратный метр":"кв.м", "кубометр":"куб.м"}
 
 entry2 = tk.Entry(frame, width=5)
 entry2.place(x=200, y=80)
@@ -257,15 +291,25 @@ entry2.bind('<KeyPress>', on_key_press)
 entry3 = tk.Entry(frame, width=5)
 entry3.place(x=220, y=105)
 entry3.bind('<KeyPress>', on_key_press)
-
 #Создаём ListBox
+listbox3 = tk.Listbox(frame, width=15, height=1)
+for key in units:
+    listbox3.insert(tk.END, str(key))
+listbox3.place(x=215, y=54)
+#combo1.current(0)# Устанавливаем значение по умолчанию
+listbox3.bind('<KeyPress>', on_key_press)
+listbox3.bind("<FocusIn>", on_focus_in)
+
+
 listbox = tk.Listbox(frame, width=55, height=20)
 listbox.place(x=10, y=55)
 listbox.place_forget()
 # Устанавливаем связь между событием нажатия клавиши и обработчиком
 listbox.bind('<KeyPress>', on_key_press)
 
+file_name_list=["Products", "Metal", "Build", "Avto"]
 category_list =["Продукты", "Металлоизделия", "Стройматериалы", "Автозапчасти"]
+category_dict = dict(zip(category_list, file_name_list))
 # Создаем StringVar
 category_string = tk.StringVar(value=" ".join(category_list))
 
@@ -274,16 +318,6 @@ listbox2 = tk.Listbox(root, width=20, height=5, font=("Arial", 10), fg="Purple",
 listbox2.pack(anchor = NE)
 listbox2.bind('<KeyPress>', category_selected)
 listbox2.configure(height=listbox2.size())
-# Создаем Combobox
-units = ["Кг", "гр (грамм)", "м (метр)", "л (литр)",
-    "п (пакет)", "пчк (пачка)", "шт (штука)", "ед (единица)","уп (упаковка)", "стк (сетка)","т (тонна)",
-    "кв.м (квадратный метр)", "куб.м (кубометр)"]
-listbox3 = tk.Listbox(frame, width=15, height=10)
-for item in units:
-    listbox3.insert(tk.END, str(item))
-listbox3.place(x=215, y=54)
-#combo1.current(0)# Устанавливаем значение по умолчанию
-listbox3.bind('<KeyPress>', on_key_press)
 
 # Создаем виджет Treeview
 '''tree = ttk.Treeview(canvas, columns=("Name", "Measure_unit", "Quantity","Cost","Summa","Date"), show="headings")
